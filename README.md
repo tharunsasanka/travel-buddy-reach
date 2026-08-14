@@ -44,3 +44,10 @@ This repository establishes a runnable MVP foundation, representative destinatio
 
 Assessments are evidence-based travel guidance, never a safety guarantee. Every response exposes evidence freshness and uncertainty.
 
+[![CI](https://github.com/tharunsasanka/travel-buddy-reach/actions/workflows/ci.yml/badge.svg)](https://github.com/tharunsasanka/travel-buddy-reach/actions/workflows/ci.yml)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Expo](https://img.shields.io/badge/Expo-54-000020?logo=expo&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-PostGIS-4169E1?logo=postgresql&logoColor=white)
+![Sri Lanka](https://img.shields.io/badge/Built%20for-Sri%20Lanka-FFB81C)
+
