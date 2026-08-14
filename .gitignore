@@ -9,3 +9,5 @@ coverage
 *.log
 apps/mobile/android
 apps/mobile/ios
+
+*.tsbuildinfo
