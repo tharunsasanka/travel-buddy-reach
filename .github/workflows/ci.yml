@@ -48,6 +48,9 @@ jobs:
       - name: Validate database schema
         run: pnpm --filter @travel-buddy/database typecheck
 
+      - name: Build database package
+        run: pnpm --filter @travel-buddy/database build
+
       - name: Type-check API
         run: pnpm --filter @travel-buddy/api typecheck
 
