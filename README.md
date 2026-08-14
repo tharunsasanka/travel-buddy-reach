@@ -2,6 +2,13 @@
 
 **Don't just find it. Know how to reach it.**
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open%20App-d86438?logo=github)](https://tharunsasanka.github.io/travel-buddy-reach/)
+[![Deploy to GitHub Pages](https://github.com/tharunsasanka/travel-buddy-reach/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/tharunsasanka/travel-buddy-reach/actions/workflows/deploy-pages.yml)
+
+🌐 **Live application:** https://tharunsasanka.github.io/travel-buddy-reach/
+
+Developed by **Tharun Sasanka** as an independent Sri Lankan travel-technology project.
+
 Travel Buddy Reach is a standalone, community-powered destination reachability and last-mile travel intelligence platform for Sri Lanka. This repository is intentionally independent from every previous repository and Colab project.
 
 ## What is included
