@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "Travel Buddy Reach",
+    "slug": "travel-buddy-reach",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "travelbuddyreach",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router"],
+    "android": { "package": "lk.travelbuddy.reach", "versionCode": 1 },
+    "ios": { "bundleIdentifier": "lk.travelbuddy.reach" },
+    "experiments": { "typedRoutes": true }
+  }
+}
+

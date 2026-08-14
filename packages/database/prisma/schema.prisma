@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  GUARDIAN
+  MODERATOR
+  ADMIN
+}
+
+enum VehicleCategory {
+  LOW_CLEARANCE_CAR
+  STANDARD_CAR
+  HIGH_CLEARANCE_CAR
+  SUV_4X4
+  MOTORBIKE
+  TUK_TUK
+  VAN
+  PUBLIC_TRANSPORT
+}
+
+enum SegmentType {
+  MAIN_ROAD
+  FINAL_ROAD
+  PARKING
+  TRAIL
+  DESTINATION
+}
+
+enum Difficulty {
+  EASY
+  MODERATE
+  DIFFICULT
+}
+
+enum ConditionStatus {
+  OPEN
+  CLOSED
+  RESTRICTED
+  UNCERTAIN
+  CROWDED
+  PARKING_FULL
+  ROAD_DAMAGED
+  MUDDY
+  SLIPPERY
+  FLOODED
+  WEAK_SIGNAL
+  TRANSIT_DISRUPTED
+}
+
+enum ReportState {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  passwordHash   String
+  displayName    String
+  role           UserRole        @default(USER)
+  preferredLang  String          @default("en")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  vehiclePassport VehiclePassport?
+  journeys       JourneyReport[]
+  conditionReports ConditionReport[]
+  saved          SavedDestination[]
+}
+
+model VehiclePassport {
+  id                    String          @id @default(cuid())
+  userId                String          @unique
+  category              VehicleCategory
+  clearanceBand         String
+  passengerCount        Int             @default(1)
+  maxWalkingMeters      Int             @default(2000)
+  travelsWithChildren   Boolean         @default(false)
+  travelsWithElderly    Boolean         @default(false)
+  accessibilityNotes    String?
+  budgetPreference      String?
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Destination {
+  id                String              @id @default(cuid())
+  slug              String              @unique
+  name              String
+  district          String
+  category          String
+  summary           String
+  latitude          Decimal             @db.Decimal(9, 6)
+  longitude         Decimal             @db.Decimal(9, 6)
+  walkingMeters     Int
+  walkingDifficulty Difficulty
+  confidenceScore   Int                 @default(0)
+  sensitive         Boolean             @default(false)
+  published         Boolean             @default(false)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  segments          AccessSegment[]
+  conditions        ConditionReport[]
+  journeys          JourneyReport[]
+  savedBy           SavedDestination[]
+}
+
+model AccessSegment {
+  id               String            @id @default(cuid())
+  destinationId    String
+  order            Int
+  type             SegmentType
+  title            String
+  distanceMeters   Int
+  surface          String
+  difficulty       Difficulty
+  instructionEn    String
+  instructionSi    String?
+  instructionTa    String?
+  suitableVehicles VehicleCategory[]
+  landmarkJson     Json?
+  lastConfirmedAt  DateTime
+  destination      Destination       @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  @@unique([destinationId, order])
+}
+
+model JourneyReport {
+  id              String       @id @default(cuid())
+  userId          String
+  destinationId   String
+  visitedAt       DateTime
+  vehicleCategory VehicleCategory
+  reached         Boolean
+  parkingNote     String?
+  walkingMeters   Int?
+  conditionJson   Json
+  verification    String       @default("COMMUNITY")
+  state           ReportState  @default(PENDING)
+  createdAt       DateTime     @default(now())
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination     Destination  @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+}
+
+model ConditionReport {
+  id            String          @id @default(cuid())
+  userId        String?
+  destinationId String
+  status        ConditionStatus
+  note          String
+  observedAt    DateTime
+  expiresAt     DateTime
+  state         ReportState     @default(PENDING)
+  createdAt     DateTime        @default(now())
+  user          User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  destination   Destination     @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  @@index([destinationId, observedAt])
+}
+
+model SavedDestination {
+  userId        String
+  destinationId String
+  createdAt     DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  @@id([userId, destinationId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  @@index([createdAt])
+}

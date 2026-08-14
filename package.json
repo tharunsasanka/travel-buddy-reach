@@ -1,0 +1,22 @@
+{
+  "name": "travel-buddy-reach",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.14.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck",
+    "format": "prettier --write .",
+    "db:generate": "pnpm --filter @travel-buddy/database db:generate",
+    "db:migrate": "pnpm --filter @travel-buddy/database db:migrate",
+    "db:seed": "pnpm --filter @travel-buddy/database db:seed"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.6",
+    "typescript": "^5.9.2"
+  }
+}
