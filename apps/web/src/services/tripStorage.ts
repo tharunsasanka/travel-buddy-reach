@@ -8,7 +8,12 @@ export function loadTripLocations(): TripLocation[] {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return starterLocations;
     const parsed: unknown = JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed as TripLocation[] : starterLocations;
+    if (!Array.isArray(parsed)) return starterLocations;
+    return (parsed as Array<TripLocation & { mapX?: number; mapY?: number }>).map((location) => {
+      if (Number.isFinite(location.latitude) && Number.isFinite(location.longitude)) return location;
+      const starter = starterLocations.find((item) => item.id === location.id);
+      return { ...location, latitude: starter?.latitude ?? 7.8731, longitude: starter?.longitude ?? 80.7718 };
+    });
   } catch {
     return starterLocations;
   }

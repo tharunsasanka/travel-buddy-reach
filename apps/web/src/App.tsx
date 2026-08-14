@@ -6,6 +6,7 @@ import { SriLankaMap } from './SriLankaMap';
 import { DestinationDetail } from './components/DestinationDetail';
 import { DestinationForm } from './components/DestinationForm';
 import { createLocationId, loadTripLocations, restoreStarterLocations, saveTripLocations } from './services/tripStorage';
+import { cloudEnabled, loadCloudTrip, syncCloudTrip } from './services/tripCloud';
 import type { TripLocation, TripLocationDraft } from './types/trip';
 
 const vehicles: { value: VehicleCategory; label: string }[] = [
@@ -26,12 +27,20 @@ export function App() {
   const [selectedId, setSelectedId] = useState(() => locations[0]?.id ?? '');
   const [formMode, setFormMode] = useState<'closed' | 'add' | 'edit'>('closed');
   const [detailId, setDetailId] = useState(() => window.location.hash.startsWith('#destination/') ? decodeURIComponent(window.location.hash.slice(13)) : '');
+  const [cloudStatus, setCloudStatus] = useState<'local' | 'loading' | 'saved' | 'error'>(cloudEnabled ? 'loading' : 'local');
   const selectedLocation = locations.find((location) => location.id === selectedId) ?? locations[0];
   const detailLocation = locations.find((location) => location.id === detailId);
   const filteredLocations = category === 'All' ? locations : locations.filter((location) => location.category === category);
   const result = useMemo(() => assessReachability(demoDestination, { destinationId: demoDestination.id, vehicleCategory: vehicle, passengerCount: 2, maxWalkingDistanceMeters: maxWalk, travellingWithChildren: false, travellingWithElderly: false }, new Date('2026-08-14')), [vehicle, maxWalk]);
 
   useEffect(() => saveTripLocations(locations), [locations]);
+  useEffect(() => {
+    if (!cloudEnabled) return;
+    loadCloudTrip().then((saved) => {
+      if (saved?.length) { setLocations(saved); setSelectedId(saved[0]!.id); setCloudStatus('saved'); }
+      else setCloudStatus('local');
+    }).catch(() => setCloudStatus('error'));
+  }, []);
   useEffect(() => {
     const syncHash = () => setDetailId(window.location.hash.startsWith('#destination/') ? decodeURIComponent(window.location.hash.slice(13)) : '');
     window.addEventListener('hashchange', syncHash);
@@ -58,6 +67,11 @@ export function App() {
     setSelectedId(remaining[0]?.id ?? '');
     closeDetail();
   };
+  const syncToCloud = async () => {
+    setCloudStatus('loading');
+    try { await syncCloudTrip(locations); setCloudStatus('saved'); }
+    catch { setCloudStatus('error'); }
+  };
 
   if (detailLocation) return <><DestinationDetail location={detailLocation} onBack={closeDetail} onEdit={() => { setSelectedId(detailLocation.id); setFormMode('edit'); }} onDelete={() => deleteDestination(detailLocation.id)} />{formMode === 'edit' && <DestinationForm location={detailLocation} nextDay={locations.length + 1} onCancel={() => setFormMode('closed')} onSave={saveDestination} />}</>;
 
@@ -74,7 +88,7 @@ export function App() {
       <section className="notice"><b>Planning prototype</b><span>The locations below demonstrate how your group’s itinerary can work. Replace them with your real planned visits and verify every access claim before publishing.</span></section>
 
       <section className="tripSection" id="trip">
-        <div className="sectionHeading"><div><div className="sectionLabel">Build the journey</div><h2>Places on our route</h2><p>Add, update and remove stops. Your plan is automatically saved in this browser.</p></div><div className="plannerTools"><button className="primary" onClick={() => setFormMode('add')}>+ Add destination</button><button className="secondaryButton" onClick={() => { if (window.confirm('Restore the six example destinations? This replaces the current list.')) { const restored = restoreStarterLocations(); setLocations(restored); setSelectedId(restored[0]?.id ?? ''); } }}>Restore examples</button></div></div>
+        <div className="sectionHeading"><div><div className="sectionLabel">Build the journey</div><h2>Places on our route</h2><p>Add, update and remove stops. Your plan is saved locally, with optional PostgreSQL cloud sync when the API is configured.</p></div><div className="plannerTools"><button className="primary" onClick={() => setFormMode('add')}>+ Add destination</button>{cloudEnabled && <button className="secondaryButton" onClick={syncToCloud} disabled={cloudStatus === 'loading'}>{cloudStatus === 'loading' ? 'Syncing…' : cloudStatus === 'saved' ? '✓ Saved to cloud' : cloudStatus === 'error' ? 'Retry cloud sync' : 'Save to cloud'}</button>}<button className="secondaryButton" onClick={() => { if (window.confirm('Restore the six example destinations? This replaces the current list.')) { const restored = restoreStarterLocations(); setLocations(restored); setSelectedId(restored[0]?.id ?? ''); } }}>Restore examples</button></div></div>
         <div className="filters tripFilters">{categories.map((item) => <button className={category === item ? 'active' : ''} onClick={() => setCategory(item)} key={item}>{item}</button>)}</div>
         {filteredLocations.length ? <div className="locationGrid">{filteredLocations.map((location) => <article className={selectedId === location.id ? 'locationCard selected' : 'locationCard'} key={location.id} onClick={() => setSelectedId(location.id)}><div className="cardTop"><span>{location.day}{location.plannedDate ? ` · ${location.plannedDate}` : ''}</span><span>{location.confidence}% confidence</span></div><small>{location.district} · {location.category}</small><h3>{location.name}</h3><div className="locationFacts"><span>🚙 {location.access}</span><span>🥾 {location.walk}</span><span>◉ {location.condition}</span></div><div className="cardActions"><button onClick={() => openDetail(location.id)}>Open details</button><button onClick={() => { setSelectedId(location.id); setFormMode('edit'); }}>Edit</button></div></article>)}</div> : <div className="emptyState"><h3>No destinations here yet.</h3><p>Add your first stop or choose another category.</p><button className="primary" onClick={() => setFormMode('add')}>Add a destination</button></div>}
       </section>

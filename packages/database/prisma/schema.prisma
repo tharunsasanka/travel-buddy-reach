@@ -182,3 +182,35 @@ model AuditLog {
   createdAt   DateTime @default(now())
   @@index([createdAt])
 }
+
+model Trip {
+  id        String     @id @default(cuid())
+  name      String     @default("Our Sri Lanka journey")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  stops     TripStop[]
+}
+
+model TripStop {
+  id          String   @id @default(cuid())
+  tripId      String
+  order       Int
+  name        String
+  district    String
+  category    String
+  day         String
+  plannedDate DateTime?
+  latitude    Decimal  @db.Decimal(9, 6)
+  longitude   Decimal  @db.Decimal(9, 6)
+  access      String
+  walk        String
+  parking     String
+  condition   String
+  confidence  Int      @default(50)
+  note        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, order])
+}

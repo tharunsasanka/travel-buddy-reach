@@ -14,8 +14,8 @@ export type TripLocation = {
   parking: string;
   condition: string;
   confidence: number;
-  mapX: number;
-  mapY: number;
+  latitude: number;
+  longitude: number;
   note: string;
 };
 

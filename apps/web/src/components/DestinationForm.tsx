@@ -12,7 +12,7 @@ function initialDraft(location: TripLocation | undefined, nextDay: number): Trip
   return location ?? {
     name: '', district: '', category: 'Viewpoint', day: `Day ${nextDay}`, plannedDate: '',
     access: '', walk: '', parking: '', condition: '', confidence: 50,
-    mapX: 110, mapY: 210, note: ''
+    latitude: 7.8731, longitude: 80.7718, note: ''
   };
 }
 
@@ -39,7 +39,7 @@ export function DestinationForm({ location, nextDay, onCancel, onSave }: Props) 
         <label>Parking<input required value={draft.parking} onChange={(e) => update('parking', e.target.value)} placeholder="Limited roadside parking" /></label>
         <label>Latest condition<input required value={draft.condition} onChange={(e) => update('condition', e.target.value)} placeholder="Slippery after rain" /></label>
         <label>Confidence: {draft.confidence}%<input type="range" min="0" max="100" value={draft.confidence} onChange={(e) => update('confidence', Number(e.target.value))} /></label>
-        <fieldset className="wide markerFields"><legend>Approximate marker position</legend><label>Left/right<input type="range" min="35" max="184" value={draft.mapX} onChange={(e) => update('mapX', Number(e.target.value))} /></label><label>North/south<input type="range" min="30" max="390" value={draft.mapY} onChange={(e) => update('mapY', Number(e.target.value))} /></label></fieldset>
+        <fieldset className="wide markerFields"><legend>Map coordinates</legend><label>Latitude<input required type="number" min="5.8" max="10" step="0.000001" value={draft.latitude} onChange={(e) => update('latitude', Number(e.target.value))} /></label><label>Longitude<input required type="number" min="79.5" max="82" step="0.000001" value={draft.longitude} onChange={(e) => update('longitude', Number(e.target.value))} /></label><small>Use coordinates from a trusted map source and verify the exact public access point.</small></fieldset>
         <label className="wide">Planning notes<textarea required rows={4} value={draft.note} onChange={(e) => update('note', e.target.value)} placeholder="What should the group confirm before travelling?" /></label>
         <div className="formActions wide"><button type="button" className="secondaryButton" onClick={onCancel}>Cancel</button><button className="primary" type="submit">{location ? 'Save changes' : 'Add to our trip'}</button></div>
       </form>
