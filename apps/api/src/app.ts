@@ -4,12 +4,14 @@ import rateLimit from '@fastify/rate-limit';
 import Fastify from 'fastify';
 import { assessReachability, assessmentRequestSchema } from '@travel-buddy/contracts';
 import { destinations } from './data.js';
+import { registerTripRoutes } from './trips.js';
 
 export function buildApp() {
   const app = Fastify({ logger: process.env.NODE_ENV !== 'test' });
   app.register(helmet);
   app.register(cors, { origin: process.env.WEB_ORIGIN?.split(',') ?? ['http://localhost:5173'] });
   app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+  registerTripRoutes(app);
 
   app.get('/health', async () => ({ status: 'ok', service: 'travel-buddy-api', version: '0.1.0' }));
 
@@ -48,4 +50,3 @@ export function buildApp() {
 
   return app;
 }
-

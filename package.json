@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "db:generate": "pnpm --filter @travel-buddy/database db:generate",
     "db:migrate": "pnpm --filter @travel-buddy/database db:migrate",
+    "db:push": "pnpm --filter @travel-buddy/database db:push",
     "db:seed": "pnpm --filter @travel-buddy/database db:seed"
   },
   "devDependencies": {
