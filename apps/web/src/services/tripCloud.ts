@@ -1,4 +1,5 @@
 import type { DestinationCategory, TripLocation } from '../types/trip';
+import { supabase } from './supabase';
 
 const API_BASE = String(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
 const TRIP_ID_KEY = 'travel-buddy-reach:cloud-trip-id:v1';
@@ -12,7 +13,9 @@ function normaliseTrip(trip: CloudTrip): TripLocation[] {
 }
 
 async function request(path: string, init?: RequestInit) {
-  const response = await fetch(`${API_BASE}${path}`, { ...init, headers: { 'content-type': 'application/json', ...init?.headers } });
+  const { data } = await supabase?.auth.getSession() ?? { data: { session: null } };
+  if (!data.session) throw new Error('Sign in before using cloud sync');
+  const response = await fetch(`${API_BASE}${path}`, { ...init, headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session.access_token}`, ...init?.headers } });
   if (!response.ok) throw new Error(`Cloud request failed (${response.status})`);
   return response.status === 204 ? null : response.json();
 }
