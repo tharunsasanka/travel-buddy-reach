@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { prisma } from '@travel-buddy/database';
 import { z } from 'zod';
+import { requireUser } from './auth.js';
 
 const stopSchema = z.object({
   id: z.string().optional(),
@@ -38,24 +39,30 @@ function tripResponse(trip: Awaited<ReturnType<typeof prisma.trip.findUniqueOrTh
 export function registerTripRoutes(app: FastifyInstance) {
   app.addHook('onClose', async () => { await prisma.$disconnect(); });
   app.post('/v1/trips', async (request, reply) => {
+    const ownerId = await requireUser(request, reply);
+    if (!ownerId) return;
     const parsed = tripSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send({ error: 'INVALID_TRIP', details: parsed.error.flatten() });
-    const trip = await prisma.trip.create({ data: { name: parsed.data.name, stops: { create: parsed.data.stops.map(stopData) } }, include: { stops: { orderBy: { order: 'asc' } } } });
+    const trip = await prisma.trip.create({ data: { ownerId, name: parsed.data.name, stops: { create: parsed.data.stops.map(stopData) } }, include: { stops: { orderBy: { order: 'asc' } } } });
     return reply.code(201).send(tripResponse(trip));
   });
 
   app.get('/v1/trips/:id', async (request, reply) => {
+    const ownerId = await requireUser(request, reply);
+    if (!ownerId) return;
     const { id } = request.params as { id: string };
-    const trip = await prisma.trip.findUnique({ where: { id }, include: { stops: { orderBy: { order: 'asc' } } } });
+    const trip = await prisma.trip.findFirst({ where: { id, ownerId }, include: { stops: { orderBy: { order: 'asc' } } } });
     if (!trip) return reply.code(404).send({ error: 'TRIP_NOT_FOUND' });
     return tripResponse(trip);
   });
 
   app.put('/v1/trips/:id', async (request, reply) => {
+    const ownerId = await requireUser(request, reply);
+    if (!ownerId) return;
     const { id } = request.params as { id: string };
     const parsed = tripSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send({ error: 'INVALID_TRIP', details: parsed.error.flatten() });
-    const exists = await prisma.trip.findUnique({ where: { id }, select: { id: true } });
+    const exists = await prisma.trip.findFirst({ where: { id, ownerId }, select: { id: true } });
     if (!exists) return reply.code(404).send({ error: 'TRIP_NOT_FOUND' });
     const trip = await prisma.$transaction(async (tx) => {
       await tx.tripStop.deleteMany({ where: { tripId: id } });
@@ -65,8 +72,10 @@ export function registerTripRoutes(app: FastifyInstance) {
   });
 
   app.delete('/v1/trips/:id', async (request, reply) => {
+    const ownerId = await requireUser(request, reply);
+    if (!ownerId) return;
     const { id } = request.params as { id: string };
-    const deleted = await prisma.trip.deleteMany({ where: { id } });
+    const deleted = await prisma.trip.deleteMany({ where: { id, ownerId } });
     if (!deleted.count) return reply.code(404).send({ error: 'TRIP_NOT_FOUND' });
     return reply.code(204).send();
   });

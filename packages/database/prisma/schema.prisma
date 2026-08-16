@@ -185,10 +185,13 @@ model AuditLog {
 
 model Trip {
   id        String     @id @default(cuid())
+  ownerId   String?
   name      String     @default("Our Sri Lanka journey")
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   stops     TripStop[]
+
+  @@index([ownerId, updatedAt])
 }
 
 model TripStop {
